@@ -1,0 +1,35 @@
+name: senior_medicine_app
+description: A Flutter app for seniors to manage medicine reminders with voice input and news reading.
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  record: ^4.4.4
+  http: ^1.1.0
+  sqflite: ^2.3.0
+  path_provider: ^2.1.1
+  flutter_local_notifications: ^16.1.0
+  flutter_tts: ^3.8.5
+  just_audio: ^0.9.35
+  permission_handler: ^11.0.1
+  intl: ^0.18.1
+  timezone: ^0.9.4
+  shared_preferences: ^2.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
