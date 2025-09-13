@@ -3,8 +3,10 @@ class Reminder {
   final String medicine;
   final String dose;
   final String time; // 24-hour format HH:mm
-  final String frequency; // daily, weekly, once
+  final String timezone; // Asia/Kolkata, etc.
+  final String repeat; // daily, weekly, once (changed from frequency)
   final String language;
+  final String? ttsAudioUrl; // URL to TTS audio file
   final DateTime createdAt;
   final bool isActive;
 
@@ -13,8 +15,10 @@ class Reminder {
     required this.medicine,
     required this.dose,
     required this.time,
-    required this.frequency,
+    this.timezone = 'Asia/Kolkata',
+    required this.repeat, // Updated field name
     required this.language,
+    this.ttsAudioUrl,
     required this.createdAt,
     this.isActive = true,
   });
@@ -25,8 +29,10 @@ class Reminder {
       'medicine': medicine,
       'dose': dose,
       'time': time,
-      'frequency': frequency,
+      'timezone': timezone,
+      'repeat': repeat, // Updated field name
       'language': language,
+      'tts_audio_url': ttsAudioUrl,
       'created_at': createdAt.toIso8601String(),
       'is_active': isActive ? 1 : 0,
     };
@@ -38,8 +44,10 @@ class Reminder {
       medicine: map['medicine'],
       dose: map['dose'],
       time: map['time'],
-      frequency: map['frequency'],
+      timezone: map['timezone'] ?? 'Asia/Kolkata',
+      repeat: map['repeat'] ?? map['frequency'] ?? 'daily', // Handle both old and new field names
       language: map['language'],
+      ttsAudioUrl: map['tts_audio_url'],
       createdAt: DateTime.parse(map['created_at']),
       isActive: map['is_active'] == 1,
     );

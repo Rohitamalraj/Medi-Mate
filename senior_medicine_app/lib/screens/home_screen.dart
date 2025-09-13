@@ -3,8 +3,6 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'voice_reminder_screen.dart';
 import 'reminders_list_screen.dart';
 import 'news_screen.dart';
-import 'manual_reminder_screen.dart';
-import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,29 +14,83 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final FlutterTts _flutterTts = FlutterTts();
   String _selectedLanguage = 'en-US';
+  String _selectedLanguageDisplay = 'English';
+
+  final Map<String, String> _languages = {
+    'en-US': 'English',
+    'ta-IN': 'தமிழ்',
+    'hi-IN': 'हिंदी',
+  };
 
   @override
   void initState() {
     super.initState();
     _initializeTts();
+    _welcomeMessage();
   }
 
   Future<void> _initializeTts() async {
     await _flutterTts.setLanguage(_selectedLanguage);
-    await _flutterTts.setSpeechRate(0.8); // Slower speech for seniors
+    await _flutterTts.setSpeechRate(0.7); // Slower speech for seniors
     await _flutterTts.setVolume(1.0);
     await _flutterTts.setPitch(1.0);
   }
 
+  Future<void> _welcomeMessage() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    await _speak("Welcome to MediMate. Choose an action by tapping the big buttons.");
+  }
+
   Future<void> _speak(String text) async {
-    await _flutterTts.speak(text);
+    try {
+      await _flutterTts.speak(text);
+    } catch (e) {
+      print('TTS Error: $e');
+    }
   }
 
   void _changeLanguage(String languageCode) {
     setState(() {
       _selectedLanguage = languageCode;
+      _selectedLanguageDisplay = _languages[languageCode] ?? 'English';
     });
-    _flutterTts.setLanguage(languageCode);
+    _initializeTts();
+    _speak("Language changed to ${_languages[languageCode]}");
+  }
+
+  void _showEmergencyDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Emergency Contact',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Call emergency services?', style: TextStyle(fontSize: 20)),
+            SizedBox(height: 16),
+            Text('Emergency: 102', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.red)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CANCEL', style: TextStyle(fontSize: 18)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _speak("Calling emergency services");
+              // TODO: Implement actual emergency calling
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('CALL', style: TextStyle(fontSize: 18, color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -47,215 +99,242 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
-          'Medicine Helper',
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+          'MediMate',
+          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.blue),
         ),
-        backgroundColor: Colors.blue[100],
+        backgroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          // Settings button
-          IconButton(
-            icon: const Icon(Icons.settings, size: 32),
-            onPressed: () {
-              _speak("Opening settings");
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
-            },
-          ),
-          // Language selector
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.language, size: 32),
-            onSelected: _changeLanguage,
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'en-US',
-                child: Text('English', style: TextStyle(fontSize: 20)),
-              ),
-              const PopupMenuItem(
-                value: 'ta-IN',
-                child: Text('தமிழ் (Tamil)', style: TextStyle(fontSize: 20)),
-              ),
-              const PopupMenuItem(
-                value: 'hi-IN',
-                child: Text('हिंदी (Hindi)', style: TextStyle(fontSize: 20)),
-              ),
-            ],
-          ),
-          // Emergency contact button
-          IconButton(
-            icon: const Icon(Icons.phone, color: Colors.red, size: 32),
-            onPressed: () {
-              _speak("Emergency contact");
-              // TODO: Implement emergency contact functionality
-            },
-          ),
-        ],
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
+      body: SafeArea(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Welcome message
+            // Main content area with 3 giant cards
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // 1. Speak Reminder - Primary Action (80-100px height)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 100,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _speak("Opening voice reminder. Press and hold the big button to speak.");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => VoiceReminderScreen(language: _selectedLanguage),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green[400],
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          elevation: 4,
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.mic, size: 48),
+                            SizedBox(width: 16),
+                            Text(
+                              '🎙 Speak Reminder',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // 2. Read News - Secondary Action
+                    SizedBox(
+                      width: double.infinity,
+                      height: 100,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _speak("Opening news reader. I will read today's health news to you.");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => NewsScreen(language: _selectedLanguage),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange[400],
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          elevation: 4,
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.newspaper, size: 48),
+                            SizedBox(width: 16),
+                            Text(
+                              '📰 Read News',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // 3. My Reminders - List Action
+                    SizedBox(
+                      width: double.infinity,
+                      height: 100,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _speak("Opening your reminders list.");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RemindersListScreen(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[400],
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          elevation: 4,
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.list_alt, size: 48),
+                            SizedBox(width: 16),
+                            Text(
+                              '⏰ My Reminders',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Bottom persistent area with language toggle and emergency
             Container(
               padding: const EdgeInsets.all(20),
-              margin: const EdgeInsets.only(bottom: 40),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.blue[200]!, width: 2),
-              ),
-              child: Column(
-                children: [
-                  const Icon(Icons.favorite, color: Colors.red, size: 48),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Welcome to Medicine Helper',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Tap any button below to get started',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-
-            // Main action buttons
-            const SizedBox(height: 20),
-            
-            // Speak button - primary action
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  _speak("Opening voice reminder");
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => VoiceReminderScreen(language: _selectedLanguage),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.mic, size: 40),
-                label: const Text('SPEAK\nAdd Medicine Reminder'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[400],
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 100),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Read News button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  _speak("Opening news reader");
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NewsScreen(language: _selectedLanguage),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.newspaper, size: 40),
-                label: const Text('READ NEWS\nListen to Today\'s News'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange[400],
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 100),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // View Reminders button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  _speak("Opening reminders list");
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RemindersListScreen(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.list_alt, size: 40),
-                label: const Text('MY REMINDERS\nView All Reminders'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue[400],
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 100),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Manual Add Reminder button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  _speak("Opening manual reminder form");
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ManualReminderScreen(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.edit, size: 32),
-                label: const Text('ADD MANUALLY\nType Medicine Details'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 80),
-                  textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  side: BorderSide(color: Colors.purple[400]!, width: 2),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 40),
-
-            // Help text
-            Container(
-              padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
               ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.info_outline, color: Colors.grey, size: 24),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Tap any button to hear instructions',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[600],
+                  // Language toggle
+                  GestureDetector(
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (context) => Container(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                'Choose Language',
+                                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 20),
+                              ..._languages.entries.map((entry) => 
+                                ListTile(
+                                  title: Text(
+                                    entry.value,
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                  trailing: _selectedLanguage == entry.key 
+                                    ? const Icon(Icons.check, color: Colors.green, size: 32)
+                                    : null,
+                                  onTap: () {
+                                    _changeLanguage(entry.key);
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[100],
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.language, size: 24, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          Text(
+                            _selectedLanguageDisplay,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Emergency contact button
+                  GestureDetector(
+                    onTap: () {
+                      _speak("Emergency contact");
+                      _showEmergencyDialog();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.emergency, size: 32, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text(
+                            'Emergency',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

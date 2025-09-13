@@ -67,7 +67,7 @@ class _RemindersListScreenState extends State<RemindersListScreen> {
   }
 
   Future<void> _speakReminder(Reminder reminder) async {
-    final text = "Reminder: Take ${reminder.dose} of ${reminder.medicine} at ${reminder.displayTime}, ${reminder.frequency}";
+    final text = "Reminder: Take ${reminder.dose} of ${reminder.medicine} at ${reminder.displayTime}, ${reminder.repeat}";
     await _flutterTts.speak(text);
   }
 
@@ -271,7 +271,7 @@ class _RemindersListScreenState extends State<RemindersListScreen> {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      '${reminder.displayTime} • ${reminder.frequency}',
+                                      '${reminder.displayTime} • ${reminder.repeat}',
                                       style: TextStyle(
                                         fontSize: 16,
                                         color: Colors.grey[600],

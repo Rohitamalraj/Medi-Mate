@@ -94,7 +94,7 @@ class NotificationService {
     );
 
     // For daily reminders, schedule recurring notifications
-    if (reminder.frequency == 'daily') {
+    if (reminder.repeat == 'daily') {
       await _scheduleRecurringReminder(reminder, scheduledDate);
     }
   }

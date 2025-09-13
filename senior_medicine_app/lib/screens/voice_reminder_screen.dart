@@ -322,7 +322,7 @@ class _VoiceReminderScreenState extends State<VoiceReminderScreen> {
         medicine: _parsedData!['medicine'],
         dose: _parsedData!['dose'],
         time: _parsedData!['time'],
-        frequency: _parsedData!['frequency'],
+        repeat: _parsedData!['frequency'] ?? _parsedData!['repeat'] ?? 'daily',
         language: widget.language,
         createdAt: DateTime.now(),
       );
@@ -336,7 +336,7 @@ class _VoiceReminderScreenState extends State<VoiceReminderScreen> {
         medicine: reminder.medicine,
         dose: reminder.dose,
         time: reminder.time,
-        frequency: reminder.frequency,
+        repeat: reminder.repeat,
         language: reminder.language,
         createdAt: reminder.createdAt,
       );
@@ -519,7 +519,7 @@ class _VoiceReminderScreenState extends State<VoiceReminderScreen> {
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     Text(
-                      'Frequency: ${_parsedData!['frequency']}',
+                      'Frequency: ${_parsedData!['frequency'] ?? _parsedData!['repeat'] ?? 'daily'}',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
