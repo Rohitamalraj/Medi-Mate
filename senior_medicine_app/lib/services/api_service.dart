@@ -170,4 +170,72 @@ class ApiService {
     }
     return 'daily'; // Default
   }
+
+  // New methods for MVP features
+  Future<Map<String, dynamic>> classifyIntent(String text) async {
+    try {
+      var response = await http.post(
+        Uri.parse('$baseUrl/classify-intent'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'text': text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Intent classification failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Fallback intent classification
+      final textLower = text.toLowerCase();
+      if (textLower.contains('emergency') || 
+          textLower.contains('help') || 
+          textLower.contains('urgent') ||
+          textLower.contains('call doctor') ||
+          textLower.contains('pain') ||
+          textLower.contains('can\'t breathe')) {
+        return {'intent': 'emergency'};
+      } else if (textLower.contains('reminder') || 
+                 textLower.contains('medicine') ||
+                 textLower.contains('tablet')) {
+        return {'intent': 'reminder'};
+      } else if (textLower.contains('news') || textLower.contains('read')) {
+        return {'intent': 'news'};
+      }
+      return {'intent': 'other'};
+    }
+  }
+
+  Future<Map<String, dynamic>> classifyHealthStatus(String text) async {
+    try {
+      var response = await http.post(
+        Uri.parse('$baseUrl/classify-health'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'text': text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Health classification failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Fallback health classification
+      final textLower = text.toLowerCase();
+      
+      final goodKeywords = ['good', 'great', 'fine', 'excellent', 'wonderful', 'healthy', 'better', 'energetic'];
+      final badKeywords = ['bad', 'terrible', 'sick', 'unwell', 'pain', 'hurt', 'tired', 'weak', 'dizzy'];
+      
+      if (goodKeywords.any((keyword) => textLower.contains(keyword))) {
+        return {'status': 'good'};
+      } else if (badKeywords.any((keyword) => textLower.contains(keyword))) {
+        return {'status': 'not well'};
+      }
+      return {'status': 'neutral'};
+    }
+  }
 }

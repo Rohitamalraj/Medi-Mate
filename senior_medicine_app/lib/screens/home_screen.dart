@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'voice_reminder_screen.dart';
-import 'reminders_list_screen.dart';
-import 'news_screen.dart';
+import 'caregiver_screen.dart';
+import '../services/emergency_service.dart';
+import '../services/health_checkin_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,8 +14,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final FlutterTts _flutterTts = FlutterTts();
+  final EmergencyService _emergencyService = EmergencyService();
+  final HealthCheckinService _healthService = HealthCheckinService();
   String _selectedLanguage = 'en-US';
   String _selectedLanguageDisplay = 'English';
+  bool _emergencyListening = false;
 
   final Map<String, String> _languages = {
     'en-US': 'English',
@@ -26,7 +30,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _initializeTts();
+    _initializeEmergencyService();
     _welcomeMessage();
+  }
+
+  Future<void> _initializeEmergencyService() async {
+    await _emergencyService.initialize();
+    await _emergencyService.startEmergencyListening();
+    setState(() {
+      _emergencyListening = true;
+    });
   }
 
   Future<void> _initializeTts() async {
@@ -63,13 +76,16 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(
-          'Emergency Contact',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          'Emergency SOS',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.red),
         ),
         content: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Call emergency services?', style: TextStyle(fontSize: 20)),
+            Icon(Icons.warning, size: 64, color: Colors.red),
+            SizedBox(height: 16),
+            Text('Emergency detected! Call emergency services now?', 
+                 style: TextStyle(fontSize: 20), textAlign: TextAlign.center),
             SizedBox(height: 16),
             Text('Emergency: 102', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.red)),
           ],
@@ -80,13 +96,13 @@ class _HomeScreenState extends State<HomeScreen> {
             child: const Text('CANCEL', style: TextStyle(fontSize: 18)),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              _speak("Calling emergency services");
-              // TODO: Implement actual emergency calling
+              _speak("Calling emergency services now");
+              await _emergencyService.manualEmergencyCall(context);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('CALL', style: TextStyle(fontSize: 18, color: Colors.white)),
+            child: const Text('CALL NOW', style: TextStyle(fontSize: 18, color: Colors.white)),
           ),
         ],
       ),
@@ -116,58 +132,81 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    // 1. Speak Reminder - Primary Action (80-100px height)
+                    // 1. Speak Reminder - Primary Action (80-100px height) with Emergency SOS
                     SizedBox(
                       width: double.infinity,
                       height: 100,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          _speak("Opening voice reminder. Press and hold the big button to speak.");
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => VoiceReminderScreen(language: _selectedLanguage),
+                      child: Stack(
+                        children: [
+                          ElevatedButton(
+                            onPressed: () {
+                              _speak("Opening voice reminder. Press and hold the big button to speak.");
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => VoiceReminderScreen(language: _selectedLanguage),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green[400],
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              elevation: 4,
                             ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[400],
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.mic, size: 48),
+                                SizedBox(width: 16),
+                                Text(
+                                  '🎙 Speak Reminder',
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          elevation: 4,
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.mic, size: 48),
-                            SizedBox(width: 16),
-                            Text(
-                              '🎙 Speak Reminder',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
+                          // Emergency SOS indicator
+                          if (_emergencyListening)
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.hearing, size: 16, color: Colors.white),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'SOS Active',
+                                      style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ],
-                        ),
+                        ],
                       ),
                     ),
 
-                    // 2. Read News - Secondary Action
+                    // 2. Daily Health Check-in - New MVP Feature
                     SizedBox(
                       width: double.infinity,
                       height: 100,
                       child: ElevatedButton(
-                        onPressed: () {
-                          _speak("Opening news reader. I will read today's health news to you.");
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => NewsScreen(language: _selectedLanguage),
-                            ),
-                          );
+                        onPressed: () async {
+                          _speak("Starting your daily health check-in. How are you feeling today?");
+                          await _healthService.performDailyCheckin(context);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange[400],
@@ -180,10 +219,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.newspaper, size: 48),
+                            Icon(Icons.favorite, size: 48),
                             SizedBox(width: 16),
                             Text(
-                              '📰 Read News',
+                              '❤️ Health Check-in',
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
@@ -194,17 +233,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
 
-                    // 3. My Reminders - List Action
+                    // 3. Caregiver Connect - New MVP Feature  
                     SizedBox(
                       width: double.infinity,
                       height: 100,
                       child: ElevatedButton(
                         onPressed: () {
-                          _speak("Opening your reminders list.");
+                          _speak("Opening caregiver dashboard. View your health status and reminders.");
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const RemindersListScreen(),
+                              builder: (context) => const CaregiverScreen(),
                             ),
                           );
                         },
@@ -219,12 +258,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.list_alt, size: 48),
+                            Icon(Icons.family_restroom, size: 48),
                             SizedBox(width: 16),
                             Text(
-                              '⏰ My Reminders',
+                              '👨‍👩‍👧 Caregiver Connect',
                               style: TextStyle(
-                                fontSize: 28,
+                                fontSize: 26,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -309,27 +348,39 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
-                  // Emergency contact button
+                  // Emergency SOS button with enhanced design
                   GestureDetector(
                     onTap: () {
-                      _speak("Emergency contact");
+                      _speak("Emergency SOS activated");
                       _showEmergencyDialog();
+                    },
+                    onLongPress: () async {
+                      // Instant emergency call on long press
+                      _speak("Emergency! Calling now!");
+                      await _emergencyService.manualEmergencyCall(context);
                     },
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.3),
+                            spreadRadius: 2,
+                            blurRadius: 8,
+                          ),
+                        ],
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.emergency, size: 32, color: Colors.white),
+                          Icon(Icons.sos, size: 32, color: Colors.white),
                           SizedBox(width: 8),
                           Text(
-                            'Emergency',
+                            'SOS',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
@@ -342,6 +393,24 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          _speak("Quick access to your medicine reminders");
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VoiceReminderScreen(language: _selectedLanguage),
+            ),
+          );
+        },
+        backgroundColor: Colors.purple[400],
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.medication, size: 28),
+        label: const Text(
+          'Quick Reminder',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
     );
