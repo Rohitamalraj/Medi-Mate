@@ -1,0 +1,216 @@
+{
+  "info": {
+    "name": "MediMate Backend API",
+    "description": "Complete API collection for MediMate backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/health",
+          "host": ["{{base_url}}"],
+          "path": ["api", "health"]
+        }
+      }
+    },
+    {
+      "name": "Register User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set('token', jsonData.token);",
+              "    pm.collectionVariables.set('user_id', jsonData.user.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"9876543210\",\n  \"name\": \"Lakshmi\",\n  \"language\": \"ta\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/register",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "Login User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set('token', jsonData.token);",
+              "    pm.collectionVariables.set('user_id', jsonData.user.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"9876543210\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "Add Medication",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": {{user_id}},\n  \"medicine_name\": \"Blood Pressure Medicine\",\n  \"dosage\": \"1 tablet\",\n  \"time\": \"08:00\",\n  \"frequency\": \"daily\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/medications",
+          "host": ["{{base_url}}"],
+          "path": ["api", "medications"]
+        }
+      }
+    },
+    {
+      "name": "Get Medications",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/medications/{{user_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "medications", "{{user_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Chat - English",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": {{user_id}},\n  \"message\": \"Hello, how are you today?\",\n  \"language\": \"en\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/chat",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chat"]
+        }
+      }
+    },
+    {
+      "name": "Chat - Tamil",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": {{user_id}},\n  \"message\": \"வணக்கம், எப்படி இருக்கீங்க?\",\n  \"language\": \"ta\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/chat",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chat"]
+        }
+      }
+    },
+    {
+      "name": "Chat - Hindi",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": {{user_id}},\n  \"message\": \"नमस्ते, आप कैसे हैं?\",\n  \"language\": \"hi\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/chat",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chat"]
+        }
+      }
+    },
+    {
+      "name": "Get User Stats",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/users/{{user_id}}/stats",
+          "host": ["{{base_url}}"],
+          "path": ["api", "users", "{{user_id}}", "stats"]
+        }
+      }
+    },
+    {
+      "name": "Get Pending Reminders",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/reminders/pending/{{user_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "reminders", "pending", "{{user_id}}"]
+        }
+      }
+    }
+  ]
+}

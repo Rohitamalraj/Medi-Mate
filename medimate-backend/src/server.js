@@ -8,6 +8,10 @@ const chatRoutes = require('./routes/chat');
 const reminderRoutes = require('./routes/reminders');
 const userRoutes = require('./routes/users');
 const speechRoutes = require('./routes/speech');
+const emergencyRoutes = require('./routes/emergency');
+const caregiversRoutes = require('./routes/caregivers');
+const healthRoutes = require('./routes/health');
+const notificationsRoutes = require('./routes/notifications');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,7 +33,11 @@ app.get('/api/health', (req, res) => {
     success: true,
     message: 'MediMate Backend API is running',
     timestamp: new Date().toISOString(),
-    version: '1.0.0'
+    version: '2.0.0',
+    features: {
+      core: ['auth', 'medications', 'chat', 'reminders', 'users', 'speech'],
+      new: ['emergency', 'caregivers', 'health', 'notifications']
+    }
   });
 });
 
@@ -40,6 +48,10 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/reminders', reminderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/speech', speechRoutes);
+app.use('/api/emergency', emergencyRoutes);
+app.use('/api/caregivers', caregiversRoutes);
+app.use('/api/health', healthRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // 404 handler
 app.use((req, res) => {

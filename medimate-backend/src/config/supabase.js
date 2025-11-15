@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const dbExtensions = require('./database-extensions');
 require('dotenv').config();
 
 // Supabase configuration
@@ -225,5 +226,8 @@ class SupabaseDB {
     };
   }
 }
+
+// Add all extension methods to the SupabaseDB class
+Object.assign(SupabaseDB.prototype, dbExtensions);
 
 module.exports = new SupabaseDB();
